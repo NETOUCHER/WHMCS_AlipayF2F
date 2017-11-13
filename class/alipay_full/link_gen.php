@@ -94,6 +94,40 @@ class alipayfull_link {
         }
     }
 
+    public function refund_f2fpay($params) {
+        $C_RATE_USD_TO_RMB = 7;
+
+        require_once __DIR__ ."/f2fpay/model/builder/AlipayTradeRefundContentBuilder.php";
+        require_once __DIR__ ."/f2fpay/service/AlipayTradeService.php";
+        if (empty($params['alipay_key'])){
+            return "Alipay public key is required.";
+        }
+        if (empty($params['rsa_key'])){
+            return "RSA private key is required.";
+        }
+
+        $qrRefundRequestContent = new AlipayTradeRefundContentBuilder();
+        $qrRefundRequestContent->setOutTradeNo($params['transid']);
+        $qrRefundRequestContent->setRefundAmount($params['amount'] * $C_RATE_USD_TO_RMB);
+        try {
+            $qrServices = new AlipayTradeService($this->f2fpay_get_basicconfig($params));
+            $qrResult = $qrServices->refund($qrRefundRequestContent);
+        } catch (Exception $e) {
+            return "The signature do not match.";
+        }
+
+        switch ($qrResult->getTradeStatus()) {
+            case "SUCCESS":
+                return "Refund success! Amount: " . $qrResult->getResponse()->refund_fee . " RMB.";
+            case "FAILED":
+                return "Failed to refund.";
+            case "UNKNOWN":
+                return "Internal error: Unknown status of refund.";
+            default:
+                return "Unexpected return value. Please do not close this page and contact support immediately.";
+        }
+    }
+
     public function mapi_get_basicconfig($params){
         return [
         "partner" => trim($params['partnerID']),
