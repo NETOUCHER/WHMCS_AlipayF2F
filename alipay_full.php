@@ -26,3 +26,10 @@ function alipay_full_link($params)
     $link = new alipayfull_link();
     return $link->get_paylink($params);
 }
+
+function alipay_refund_f2fpay($params)
+{
+    require_once __DIR__ . "/class/alipay_full/link_gen.php";
+    $link = new alipayfull_link();
+    return $link->refund_f2fpay($params);
+}
