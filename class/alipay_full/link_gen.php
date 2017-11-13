@@ -107,7 +107,7 @@ class alipayfull_link {
         }
 
         $qrRefundRequestContent = new AlipayTradeRefundContentBuilder();
-        $qrRefundRequestContent->setOutTradeNo($params['transid']);
+        $qrRefundRequestContent->setTradeNo($params['transid']);
         $qrRefundRequestContent->setRefundAmount($params['amount'] * $C_RATE_USD_TO_RMB);
         try {
             $qrServices = new AlipayTradeService($this->f2fpay_get_basicconfig($params));
@@ -118,13 +118,33 @@ class alipayfull_link {
 
         switch ($qrResult->getTradeStatus()) {
             case "SUCCESS":
-                return "Refund success! Amount: " . $qrResult->getResponse()->refund_fee . " RMB.";
+                return array(
+                  'status' => 'success',
+                  'rawdata' => $response,
+                  'transid' => $params['transid'],
+                  'fees' => $params['amount'],
+                );
             case "FAILED":
-                return "Failed to refund.";
+              return array(
+                'status' => 'declined',
+                'rawdata' => $response,
+                'transid' => $params['transid'],
+                'fees' => $params['amount'],
+              );
             case "UNKNOWN":
-                return "Internal error: Unknown status of refund.";
+              return array(
+                'status' => 'error',
+                'rawdata' => $response,
+                'transid' => $params['transid'],
+                'fees' => $params['amount'],
+              );
             default:
-                return "Unexpected return value. Please do not close this page and contact support immediately.";
+              return array(
+                'status' => 'error',
+                'rawdata' => "There must be sth wrong. I cannot read the return.",
+                'transid' => $params['transid'],
+                'fees' => $params['amount'],
+              );
         }
     }
 
