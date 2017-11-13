@@ -135,21 +135,21 @@ class alipayfull_link {
             case "SUCCESS":
                 return array(
                   'status' => 'success',
-                  'rawdata' => $response,
+                  'rawdata' => $qrResult->getResponse(),
                   'transid' => $params['transid'],
                   'fees' => $params['amount'],
                 );
             case "FAILED":
               return array(
                 'status' => 'declined',
-                'rawdata' => $response,
+                'rawdata' => $qrResult->getResponse(),
                 'transid' => $params['transid'],
                 'fees' => $params['amount'],
               );
             case "UNKNOWN":
               return array(
                 'status' => 'error',
-                'rawdata' => $response,
+                'rawdata' => $qrResult->getResponse(),
                 'transid' => $params['transid'],
                 'fees' => $params['amount'],
               );
