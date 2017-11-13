@@ -100,10 +100,20 @@ class alipayfull_link {
         require_once __DIR__ ."/f2fpay/model/builder/AlipayTradeRefundContentBuilder.php";
         require_once __DIR__ ."/f2fpay/service/AlipayTradeService.php";
         if (empty($params['alipay_key'])){
-            return "Alipay public key is required.";
+            return array(
+              'status' => 'error',
+              'rawdata' => "Alipay public key is required.",
+              'transid' => $params['transid'],
+              'fees' => $params['amount'],
+            );
         }
         if (empty($params['rsa_key'])){
-            return "RSA private key is required.";
+            return array(
+              'status' => 'error',
+              'rawdata' => "RSA private key is required.",
+              'transid' => $params['transid'],
+              'fees' => $params['amount'],
+            );
         }
 
         $qrRefundRequestContent = new AlipayTradeRefundContentBuilder();
@@ -113,7 +123,12 @@ class alipayfull_link {
             $qrServices = new AlipayTradeService($this->f2fpay_get_basicconfig($params));
             $qrResult = $qrServices->refund($qrRefundRequestContent);
         } catch (Exception $e) {
-            return "The signature do not match.";
+            return array(
+              'status' => 'error',
+              'rawdata' => "Caught Error".$e,
+              'transid' => $params['transid'],
+              'fees' => $params['amount'],
+            );
         }
 
         switch ($qrResult->getTradeStatus()) {
