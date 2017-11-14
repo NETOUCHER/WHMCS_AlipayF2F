@@ -18,9 +18,6 @@ class alipayfull_link {
         $type = Capsule::table("tblpaymentgateways")->where("gateway","alipay_full")->where("setting","apitype")->first();
         $skintype = Capsule::table("tblpaymentgateways")->where("gateway","alipay_full")->where("setting","skintype")->first();
 
-        $this->_log('get_paylink ' . print_r($params, true));
-        $this->_log('type ' . print_r($type, true));
-
         switch ($type->value) {
             case "1":
                 return $this->normal_mapi($params);
@@ -98,25 +95,11 @@ class alipayfull_link {
         }
     }
 
-    public function _log($msg) {
-        $mysqli = new mysqli("localhost", "log", "7AekogGtDWdL7V8e", "log");
-        if ($mysqli->connect_errno) {
-            echo "Failed to connect to MySQL: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;
-        }
-        $mysqli->query('INSERT INTO WHMCS_f2f(message) VALUES (\'' . $msg . '\')');
-        $mysqli->close();
-    }
-
     public function refund_f2fpay($params) {
-
-        $this->_log('refund_f2fpay start ' . date());
-
         $C_RATE_USD_TO_RMB = 7;
 
         require_once __DIR__ ."/f2fpay/model/builder/AlipayTradeRefundContentBuilder.php";
         require_once __DIR__ ."/f2fpay/service/AlipayTradeService.php";
-
-        $this->_log('require success');
 
         if (empty($params['alipay_key'])){
             return array(
@@ -135,68 +118,51 @@ class alipayfull_link {
             );
         }
 
-        $this->_log('key check success');
-
         $qrRefundRequestContent = new AlipayTradeRefundContentBuilder();
         $qrRefundRequestContent->setTradeNo($params['transid']);
         $qrRefundRequestContent->setRefundAmount($params['amount'] * $C_RATE_USD_TO_RMB);
 
-        $this->_log('refund request content build success');
-
         try {
             $qrServices = new AlipayTradeService($this->f2fpay_get_basicconfig($params));
             $qrResult = $qrServices->refund($qrRefundRequestContent);
-
-            $this->_log('refund request send success');
         } catch (Exception $e) {
-            $this->_log('refund request send failed');
             return array(
-              'status' => 'error',
-              'rawdata' => "Caught Error".$e,
-              'transid' => $params['transid'],
-              'fees' => $params['amount'],
+                'status' => 'error',
+                'rawdata' => "Caught Error".$e,
+                'transid' => $params['transid'],
+                'fees' => $params['amount'],
             );
         }
 
         switch ($qrResult->getTradeStatus()) {
             case "SUCCESS":
-                $this->_log('refund result: SUCCESS');
-                $this->_log(print_r($qrResult, true));
-                $this->_log(print_r($qrResult->getResponse(), true));
                 return array(
-                  'status' => 'success',
-                  'rawdata' => $qrResult->getResponse(),
-                  'transid' => $params['transid'],
-                  'fees' => $params['amount'],
+                    'status' => 'success',
+                    'rawdata' => $qrResult->getResponse(),
+                    'transid' => $params['transid'],
+                    'fees' => $params['amount'],
                 );
             case "FAILED":
-              $this->_log('refund result: FAILED');
-                $this->_log(print_r($qrResult, true));
-                $this->_log(print_r($qrResult->getResponse(), true));
-              return array(
-                'status' => 'declined',
-                'rawdata' => $qrResult->getResponse(),
-                'transid' => $params['transid'],
-                'fees' => $params['amount'],
-              );
+                return array(
+                    'status' => 'declined',
+                    'rawdata' => $qrResult->getResponse(),
+                    'transid' => $params['transid'],
+                    'fees' => $params['amount'],
+                );
             case "UNKNOWN":
-              $this->_log('refund result: UNKNOWN');
-                $this->_log(print_r($qrResult, true));
-                $this->_log(print_r($qrResult->getResponse(), true));
-              return array(
-                'status' => 'error',
-                'rawdata' => $qrResult->getResponse(),
-                'transid' => $params['transid'],
-                'fees' => $params['amount'],
-              );
+                return array(
+                    'status' => 'error',
+                    'rawdata' => $qrResult->getResponse(),
+                    'transid' => $params['transid'],
+                    'fees' => $params['amount'],
+                );
             default:
-              $this->_log('refund result: DEFAULT');
-              return array(
-                'status' => 'error',
-                'rawdata' => "There must be sth wrong. I cannot read the return.",
-                'transid' => $params['transid'],
-                'fees' => $params['amount'],
-              );
+                return array(
+                    'status' => 'error',
+                    'rawdata' => "There must be sth wrong. I cannot read the return.",
+                    'transid' => $params['transid'],
+                    'fees' => $params['amount'],
+                );
         }
     }
 
