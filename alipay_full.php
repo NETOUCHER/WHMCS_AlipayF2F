@@ -28,7 +28,7 @@ function alipay_full_link($params)
     return $link->get_paylink($params);
 }
 
-function alipay_refund($params)
+function alipay_full_refund($params)
 {
     require_once __DIR__ . "/class/alipay_full/link_gen.php";
     $link = new alipayfull_link();
