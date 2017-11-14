@@ -17,6 +17,10 @@ class alipayfull_link {
         }
         $type = Capsule::table("tblpaymentgateways")->where("gateway","alipay_full")->where("setting","apitype")->first();
         $skintype = Capsule::table("tblpaymentgateways")->where("gateway","alipay_full")->where("setting","skintype")->first();
+
+        $this->_log('get_paylink ' . print_r($params, true));
+        $this->_log('type ' . print_r($type, true));
+
         switch ($type->value) {
             case "1":
                 return $this->normal_mapi($params);
